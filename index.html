@@ -510,7 +510,9 @@ const kitVal=k=>k.itens.reduce((a,i)=>a+i.preco*i.qtd,0);
 /* endereço da loja de cada vendedor: 3mix.com.br/nome-do-vendedor */
 const DOMINIO='3mix.com.br';
 const slugV=v=>v.nome.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const lojaLink=vid=>{const v=vend(vid);return `https://${DOMINIO}/${v?slugV(v):vid}`};
+/* no ar (Vercel ou domínio próprio) usa o endereço onde o app está aberto */
+const BASE=(location.protocol==='https:'&&(location.hostname.endsWith('.vercel.app')||location.hostname.endsWith(DOMINIO)))?location.origin:'https://'+DOMINIO;
+const lojaLink=vid=>{const v=vend(vid);return `${BASE}/${v?slugV(v):vid}`};
 const msgGrupo=v=>{const its=S.prods.filter(p=>eV(v.id,p.id)>0);
  return `✨ *3mix Perfumes* — pronta entrega com ${v.nome.split(' ')[0]}\n\n${its.slice(0,6).map(p=>`• ${p.nome} (${p.ml} ml) — R$ ${fmt(p.preco)}`).join('\n')}${its.length>6?`\n…e mais ${its.length-6} fragrâncias`:''}\n\n🛍️ Veja as fotos e faça seu pedido:\n${lojaLink(v.id)}`};
 function copiar(t,ok){navigator.clipboard?.writeText(t).then(()=>toast(ok),()=>toast('Não foi possível copiar'))}
@@ -1145,7 +1147,7 @@ document.addEventListener('submit',e=>{
 document.querySelectorAll('[data-ic]').forEach(e=>e.innerHTML=ic(e.dataset.ic));
 try{const id=localStorage.getItem(SESS);const u=S.users.find(x=>x.id===id&&x.status==='ativo');if(u)iniciar(u)}catch(e){}
 /* link da loja: #loja-<vendedor> abre direto a vitrine do cliente */
-function abrirHash(){const h=location.hash.slice(1);if(!h)return;const v=S.vend.find(x=>x.ativo&&(slugV(x)===h||'loja-'+x.id===h));if(v){UI.role='loja';UI.vid=v.id;UI.cart={};UI.publico=true;UI.modal=null}}
+function abrirHash(){const h=location.hash.slice(1)||decodeURIComponent(location.pathname.replace(/^\/+|\/+$/g,'').replace(/\.html$/,'').split('/').pop()||'');if(!h)return;const v=S.vend.find(x=>x.ativo&&(slugV(x)===h||'loja-'+x.id===h));if(v){UI.role='loja';UI.vid=v.id;UI.cart={};UI.publico=true;UI.modal=null}}
 try{abrirHash()}catch(e){}
 window.addEventListener('hashchange',()=>{abrirHash();render()});
 render();
